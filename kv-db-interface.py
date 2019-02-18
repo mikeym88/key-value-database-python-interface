@@ -103,8 +103,6 @@ def insert_multiple(session, kv_values):
         for entry in kv_values:
             if type(entry) is tuple or type(entry) is list:
                 session.add(KeyValue(entry[0], _convert_to_supported_type(entry[1])))
-
-            # TODO: find out why this is not working
             if type(entry) is dict:
                 add_dict(entry)
 
@@ -133,7 +131,7 @@ def main():
     session = sessionmaker(bind=db_engine)()
     insert(session, "1", "somethingasdasd")
     insert(session, "2", 1)
-    insert_multiple(session, [("3", "4"), ["4", "5"], {"6", "7"}])
+    insert_multiple(session, [("3", "4"), ["4", "5"], {"6": "7"}])
     results = get(session, "2")
     print(results.key, int.from_bytes(results.value, byteorder="little"))
 
