@@ -2,11 +2,9 @@ from sqlalchemy.ext.declarative import declarative_base
 import argparse
 from sqlalchemy import *
 from sqlalchemy.orm import *
-import sqlalchemy.exc
 import json
 import re
 import sys
-from pprint import pprint
 
 Base = declarative_base()
 
@@ -122,10 +120,20 @@ def insert_multiple(session, kv_values):
 
 
 def update(session, key, value):
-    raise NotImplemented
+    kv_entry = get(session, key)
+    kv_entry.value = _convert_to_supported_type(value)
+    session.commit()
 
 
-def main():
+def remove(session, keys):
+    if type(keys) is not list:
+        raise TypeError("A list of keys is expected. Got %s instead." % str(type(keys)))
+    for kv_entry in get_multiple(session, keys):
+        session.delete(kv_entry)
+    session.commit()
+
+
+def test():
     conn_string = get_db_connection_string_from_settings_file()
     print("Connecting to: %s" % conn_string)
 
@@ -137,7 +145,7 @@ def main():
 
     # insert() TEST
     print("insert() test... "),
-    insert(session, "1", "somethingasdasd")
+    insert(session, "1", "original")
     insert(session, "2", 1)
 
     # insert_multiple() TEST
@@ -161,6 +169,12 @@ def main():
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
 
+    # update() TEST
+    print("update() test... ")
+    update(session, "1", "updated")
+    results = get(session, "1")
+    print(results.key, int.from_bytes(results.value, byteorder="little"))
+
     return
 
 
@@ -177,7 +191,7 @@ def get_options():
 
 if __name__ == "__main__":
     try:
-        main()
+        test()
         exit(0)
     except KeyboardInterrupt:
         print("Program ended by user.")
