@@ -175,6 +175,13 @@ def test():
     results = get(session, "1")
     print(results.key, int.from_bytes(results.value, byteorder="little"))
 
+    # remove() TEST
+    print("remove() test... ")
+    remove(session, ["1", "2", "3", "4", "5", "6", "7"])
+    results = get_all(session)
+    for i in range(0, len(results)):
+        print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
+    print("Done.")
     return
 
 
