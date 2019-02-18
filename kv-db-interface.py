@@ -6,7 +6,6 @@ import json
 import re
 import sys
 
-
 class KeyValue(declarative_base()):
     __tablename__ = "kvtable"
 
@@ -20,6 +19,9 @@ class KeyValue(declarative_base()):
 
 
 class KeyValueDatabaseInterface(object):
+    """
+    An interface class for a simple Key-Value Relational Database. Has several different CRUD methods
+    """
     def __init__(self, connection_string=None, connection_file=None):
         conn_string = "sqlite:///kv_db.db"
         if connection_string is not None:
@@ -34,7 +36,15 @@ class KeyValueDatabaseInterface(object):
 
         self.session = sessionmaker(bind=db_engine)()
 
+
     def _convert_to_supported_type(self, value):
+        """
+        Private function that converts a value to bytes so that it can be inserted as a blob in the database.
+
+        :param value: the value to be converted to bytes
+        :return: value
+        :rtype: bytes
+        """
         if type(value) is str:
             return bytes(value, 'UTF-8')
         elif type(value) is int:
@@ -42,6 +52,7 @@ class KeyValueDatabaseInterface(object):
         # TODO: add other cases
         else:
             raise TypeError("Type %s is not supported." % str(type(value)))
+
 
     def get_db_connection_string_from_settings_file(self, filename="settings.json"):
         json_data = open(filename).read()
@@ -79,17 +90,48 @@ class KeyValueDatabaseInterface(object):
         return '%s%s://%s%s%s/%s.db' % (db_dialect, db_driver, db_credentials, hostname, port, db_name)
 
     def get_all(self):
+        """
+        A method that returns all the Key-Value pairs in the database
+
+        :return: list of all Key-Value pairs from the database
+        :rtype: List<KeyValue>
+        """
         return self.session.query(KeyValue).all()
 
     def get(self, key):
+        """
+        Returns the entry associated with the key.
+
+        :param key: the key of the entry to be retrieved from the database
+        :type key: string
+        :return: entry associated with that key
+        :rtype: KeyValue
+        """
         return self.session.query(KeyValue).filter(KeyValue.key == key).first()
 
     def get_multiple(self, keys):
+        """
+        Returns a list of entries associated with the provided keys.
+
+        :param keys: A list of keys for which to retrieve the entries from the database.
+        :type keys: List<string>
+        :return: A list of Key-Value pairs
+        :rtype: List<KeyValue>
+        """
         if type(keys) is not list:
             raise TypeError("A list of keys is expected. Got %s instead." % str(type(keys)))
         return self.session.query(KeyValue).filter(KeyValue.key.in_(keys)).all()
 
     def insert(self, key, value):
+        """
+        Insert a single entry into the database.
+
+        :param key: The key for the entry.
+        :type key: string
+        :param value: The associated value.
+        :return: True is the insertion was successful; False otherwise.
+        :rtype: bool
+        """
         try:
             self.session.add(KeyValue(key, self._convert_to_supported_type(value)))
             self.session.commit()
@@ -100,6 +142,13 @@ class KeyValueDatabaseInterface(object):
         return True
 
     def insert_multiple(self, kv_values):
+        """
+        Insert multiple Key-Value entries.
+        :param kv_values: A set of Key-Value pairs.
+        :type kv_values: List<Tuple, List, or Dictionary> or Dictionary<string,value>
+        :return: True is the insertions were successful; False otherwise.
+        :rtype: bool
+        """
         try:
             if type(kv_values) is not dict and type(kv_values) is not list:
                 raise TypeError("Type %s is not supported." % str(type(kv_values)))
@@ -126,11 +175,23 @@ class KeyValueDatabaseInterface(object):
         return True
 
     def update(self, key, value):
+        """
+        Updates the entry associated with the key with the value provided.
+        :param key: the entry's key
+        :param value: the new value of the entry
+        :return: void
+        """
         kv_entry = self.get(key)
         kv_entry.value = self._convert_to_supported_type(value)
         self.session.commit()
 
     def remove(self, keys):
+        """
+        Remove the entries associate with the keys provided.
+        :param keys:
+        :type keys: List<string>
+        :return: void
+        """
         if type(keys) is not list:
             raise TypeError("A list of keys is expected. Got %s instead." % str(type(keys)))
         for kv_entry in self.get_multiple(keys):
@@ -196,7 +257,7 @@ def get_options():
 if __name__ == "__main__":
     try:
         test()
-        exit(0)
     except KeyboardInterrupt:
         print("Program ended by user.")
-        exit(0)
+
+    exit(0)
