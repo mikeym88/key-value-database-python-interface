@@ -9,12 +9,16 @@ from pprint import pprint
 Base = declarative_base()
 
 
-class KeyValues(Base):
+class KeyValue(Base):
     __tablename__ = "kvtable"
 
     id = Column(Integer, primary_key=True)
     key = Column(String(), nullable=False, unique=True)
     value = Column(BLOB, nullable=False)
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
 
 
 def get_db_connection_string_from_settings_file(filename="settings.json"):
@@ -54,11 +58,11 @@ def get_db_connection_string_from_settings_file(filename="settings.json"):
 
 
 def get_all(session):
-    return session.query(KeyValues).all()
+    return session.query(KeyValue).all()
 
 
 def get(session, key):
-    raise NotImplemented
+    return session.query(KeyValue).filter(KeyValue.key == key).all()
 
 
 def get_multiple(session, keys):
@@ -68,14 +72,25 @@ def get_multiple(session, keys):
 
 
 def insert(session, key, value):
-    raise NotImplemented
+    if type(value) is str:
+        session.add(KeyValue(key, bytes(value, 'UTF-8')))
+    elif type(value) is int:
+        session.add(KeyValue(key, value.to_bytes(value.bit_length() + 7, byteorder="little")))
+    # TODO: add other cases
+    else:
+        raise TypeError("Type %s is not supported." % str(type(value)))
+
+    session.commit()
+    return
 
 
+"""
 def insert(session, key_values):
     raise NotImplemented
+"""
 
 
-def update(session, key):
+def update(session, key, value):
     raise NotImplemented
 
 
@@ -88,6 +103,16 @@ def main():
     Base.metadata.bind = db_engine
 
     session = sessionmaker(bind=db_engine)()
+    insert(session, "1", "somethingasdasd")
+    insert(session, "2", 1)
+
+    results = get(session, "2")
+    for i in range(0, len(results)):
+        print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
+
+    results = get_all(session)
+    for i in range(0, len(results)):
+        print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
 
     return
 
