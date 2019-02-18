@@ -1,4 +1,9 @@
 {
-  "databaseType" : "sqlite",
-  "databaseName" : "kv_db"
+  "databaseEngine" : "sqlite",
+  "databaseName" : "kv_db",
+  "port" : 90,
+  "hostname" : "hostname",
+  "driver" : "DRIVER",
+  "username" : "USER",
+  "password" : "Password"
 }
