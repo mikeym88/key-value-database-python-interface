@@ -2,8 +2,10 @@ from sqlalchemy.ext.declarative import declarative_base
 import argparse
 from sqlalchemy import *
 from sqlalchemy.orm import *
+import sqlalchemy.exc
 import json
 import re
+import sys
 from pprint import pprint
 
 Base = declarative_base()
@@ -78,42 +80,45 @@ def get(session, key):
 def get_multiple(session, keys):
     if type(keys) is not list:
         raise TypeError("A list of keys is expected. Got %s instead." % str(type(keys)))
-    raise NotImplemented()
+    return session.query(KeyValue).filter(KeyValue.key.in_(keys)).all()
 
 
 def insert(session, key, value):
-    session.add(KeyValue(key, _convert_to_supported_type(value)))
-
-    session.commit()
-    return
+    try:
+        session.add(KeyValue(key, _convert_to_supported_type(value)))
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print("Exception encountered %s" % e.with_traceback(sys.exc_info()[2]))
+        return False
+    return True
 
 
 def insert_multiple(session, kv_values):
-    if type(kv_values) is not dict and type(kv_values) is not list:
-        raise TypeError("Type %s is not supported." % str(type(kv_values)))
+    try:
+        if type(kv_values) is not dict and type(kv_values) is not list:
+            raise TypeError("Type %s is not supported." % str(type(kv_values)))
 
-    def add_dict(dictionary):
-        for key in list(dictionary.keys()):
-            session.add(KeyValue(key, _convert_to_supported_type(dictionary[key])))
+        def add_dict(dictionary):
+            for key in list(dictionary.keys()):
+                session.add(KeyValue(key, _convert_to_supported_type(dictionary[key])))
 
-    if type(kv_values) is dict:
-        add_dict(kv_values)
+        if type(kv_values) is dict:
+            add_dict(kv_values)
 
-    if type(kv_values) is list:
-        for entry in kv_values:
-            if type(entry) is tuple or type(entry) is list:
-                session.add(KeyValue(entry[0], _convert_to_supported_type(entry[1])))
-            if type(entry) is dict:
-                add_dict(entry)
+        if type(kv_values) is list:
+            for entry in kv_values:
+                if type(entry) is tuple or type(entry) is list:
+                    session.add(KeyValue(entry[0], _convert_to_supported_type(entry[1])))
+                if type(entry) is dict:
+                    add_dict(entry)
 
-    session.commit()
-    # raise NotImplementedError
-
-
-"""
-def insert(session, key_values):
-    raise NotImplemented
-"""
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print("Exception encountered %s" % e.with_traceback(sys.exc_info()[2]))
+        return False
+    return True
 
 
 def update(session, key, value):
@@ -129,13 +134,30 @@ def main():
     Base.metadata.bind = db_engine
 
     session = sessionmaker(bind=db_engine)()
+
+    # insert() TEST
+    print("insert() test... "),
     insert(session, "1", "somethingasdasd")
     insert(session, "2", 1)
+
+    # insert_multiple() TEST
+    print("insert_multiple() test... ")
     insert_multiple(session, [("3", "4"), ["4", "5"], {"6": "7"}])
+
+    # get() TEST
+    print("get() test... ")
     results = get(session, "2")
     print(results.key, int.from_bytes(results.value, byteorder="little"))
 
+    # get_all() TEST
+    print("get_all() test... ")
     results = get_all(session)
+    for i in range(0, len(results)):
+        print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
+
+    # get_multiple() TEST
+    print("get_multiple() test... ")
+    results = get_multiple(session, ["1", "2"])
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
 
