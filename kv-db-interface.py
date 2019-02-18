@@ -21,6 +21,16 @@ class KeyValue(Base):
         self.value = value
 
 
+def _convert_to_supported_type(value):
+    if type(value) is str:
+        return bytes(value, 'UTF-8')
+    elif type(value) is int:
+        return value.to_bytes(value.bit_length() + 7, byteorder="little")
+    # TODO: add other cases
+    else:
+        raise TypeError("Type %s is not supported." % str(type(value)))
+
+
 def get_db_connection_string_from_settings_file(filename="settings.json"):
     json_data = open(filename).read()
     settings = json.loads(json_data)
@@ -62,26 +72,44 @@ def get_all(session):
 
 
 def get(session, key):
-    return session.query(KeyValue).filter(KeyValue.key == key).all()
+    return session.query(KeyValue).filter(KeyValue.key == key).first()
 
 
 def get_multiple(session, keys):
     if type(keys) is not list:
         raise TypeError("A list of keys is expected. Got %s instead." % str(type(keys)))
-    raise NotImplemented
+    raise NotImplemented()
 
 
 def insert(session, key, value):
-    if type(value) is str:
-        session.add(KeyValue(key, bytes(value, 'UTF-8')))
-    elif type(value) is int:
-        session.add(KeyValue(key, value.to_bytes(value.bit_length() + 7, byteorder="little")))
-    # TODO: add other cases
-    else:
-        raise TypeError("Type %s is not supported." % str(type(value)))
+    session.add(KeyValue(key, _convert_to_supported_type(value)))
 
     session.commit()
     return
+
+
+def insert_multiple(session, kv_values):
+    if type(kv_values) is not dict and type(kv_values) is not list:
+        raise TypeError("Type %s is not supported." % str(type(kv_values)))
+
+    def add_dict(dictionary):
+        for key in list(dictionary.keys()):
+            session.add(KeyValue(key, _convert_to_supported_type(dictionary[key])))
+
+    if type(kv_values) is dict:
+        add_dict(kv_values)
+
+    if type(kv_values) is list:
+        for entry in kv_values:
+            if type(entry) is tuple or type(entry) is list:
+                session.add(KeyValue(entry[0], _convert_to_supported_type(entry[1])))
+
+            # TODO: find out why this is not working
+            if type(entry) is dict:
+                add_dict(entry)
+
+    session.commit()
+    # raise NotImplementedError
 
 
 """
@@ -105,10 +133,9 @@ def main():
     session = sessionmaker(bind=db_engine)()
     insert(session, "1", "somethingasdasd")
     insert(session, "2", 1)
-
+    insert_multiple(session, [("3", "4"), ["4", "5"], {"6", "7"}])
     results = get(session, "2")
-    for i in range(0, len(results)):
-        print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
+    print(results.key, int.from_bytes(results.value, byteorder="little"))
 
     results = get_all(session)
     for i in range(0, len(results)):
