@@ -6,7 +6,10 @@ import json
 import re
 import sys
 
-class KeyValue(declarative_base()):
+Base = declarative_base()
+
+
+class KeyValue(Base):
     __tablename__ = "kvtable"
 
     id = Column(Integer, primary_key=True)
@@ -31,8 +34,8 @@ class KeyValueDatabaseInterface(object):
 
         print("Connecting to: %s" % conn_string)
         db_engine = create_engine(conn_string)
-        declarative_base().metadata.create_all(db_engine)
-        declarative_base().metadata.bind = db_engine
+        Base.metadata.create_all(db_engine)
+        Base.metadata.bind = db_engine
 
         self.session = sessionmaker(bind=db_engine)()
 
@@ -49,7 +52,9 @@ class KeyValueDatabaseInterface(object):
             return bytes(value, 'UTF-8')
         elif type(value) is int:
             return value.to_bytes(value.bit_length() + 7, byteorder="little")
-        # TODO: add other cases
+        elif type(value) is bytes:
+            return value
+        # TODO: add more supported formats
         else:
             raise TypeError("Type %s is not supported." % str(type(value)))
 
