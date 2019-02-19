@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message Annoucement {
+    string sender = 1;
+    repeated string recipients = 2;
+    string message = 3;
+}
