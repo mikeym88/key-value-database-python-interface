@@ -188,7 +188,7 @@ class KeyValueDatabaseInterface(object):
     def remove(self, keys):
         """
         Remove the entries associate with the keys provided.
-        :param keys:
+        :param keys: The keys of the entries to remove
         :type keys: List<string>
         :return: void
         """
@@ -200,7 +200,12 @@ class KeyValueDatabaseInterface(object):
 
 
 def test():
+    get_options().print_help()
+    print("\r\n\r\n")
+
     kvDb = KeyValueDatabaseInterface(connection_file='settings.json')
+
+    print("\r\n===STARTING TESTS===\r\n")
     # insert() TEST
     print("insert() test... "),
     kvDb.insert("1", "original")
@@ -239,19 +244,19 @@ def test():
     results = kvDb.get_all()
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
-    print("Done.")
+    print("\r\n===TESTS FINISHED===\r\n")
     return
 
 
 def get_options():
     parser = argparse.ArgumentParser(
         description="Interface for a simple key-value database.",
-        epilog="...",
+        epilog=None,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    options = parser.parse_args()
+    # options = parser.parse_args()
 
-    return options
+    return parser
 
 
 if __name__ == "__main__":
