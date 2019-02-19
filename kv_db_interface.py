@@ -203,45 +203,45 @@ def test():
     get_options().print_help()
     print("\r\n\r\n")
 
-    kvDb = KeyValueDatabaseInterface(connection_file='settings.json')
+    kv_db = KeyValueDatabaseInterface(connection_file='settings.json')
 
     print("\r\n===STARTING TESTS===\r\n")
     # insert() TEST
     print("insert() test... "),
-    kvDb.insert("1", "original")
-    kvDb.insert("2", 1)
+    kv_db.insert("1", "original")
+    kv_db.insert("2", 1)
 
     # insert_multiple() TEST
     print("insert_multiple() test... ")
-    kvDb.insert_multiple([("3", "4"), ["4", "5"], {"6": "7"}])
+    kv_db.insert_multiple([("3", "4"), ["4", "5"], {"6": "7"}])
 
     # get() TEST
     print("get() test... ")
-    results = kvDb.get("2")
+    results = kv_db.get("2")
     print(results.key, int.from_bytes(results.value, byteorder="little"))
 
     # get_all() TEST
     print("get_all() test... ")
-    results = kvDb.get_all()
+    results = kv_db.get_all()
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
 
     # get_multiple() TEST
     print("get_multiple() test... ")
-    results = kvDb.get_multiple(["1", "2"])
+    results = kv_db.get_multiple(["1", "2"])
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
 
     # update() TEST
     print("update() test... ")
-    kvDb.update("1", "updated")
-    results = kvDb.get("1")
+    kv_db.update("1", "updated")
+    results = kv_db.get("1")
     print(results.key, int.from_bytes(results.value, byteorder="little"))
 
     # remove() TEST
     print("remove() test... ")
-    kvDb.remove(["1", "2", "3", "4", "5", "6", "7"])
-    results = kvDb.get_all()
+    kv_db.remove(["1", "2", "3", "4", "5", "6", "7"])
+    results = kv_db.get_all()
     for i in range(0, len(results)):
         print(results[i].key, int.from_bytes(results[i].value, byteorder="little"))
     print("\r\n===TESTS FINISHED===\r\n")
