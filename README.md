@@ -11,6 +11,17 @@ implementation can be hidden. Instead, a dictionary or a tuple will probably be 
 By default the module uses [SQLite3](https://www.sqlite.org/) as a database, but it can [support any of the ones
 supported by SQLALchemy](https://docs.sqlalchemy.org/en/latest/core/engines.html).
 
+## Database
+
+Currently SQLite defaults as the default database. It's a local database saved to a `.db` file. You can open and view
+their content using 
+
+## Python Google Protocol Buffer Message() Class Document
+
+Google provides document on the Python Protobuf classes: <https://developers.google.com/protocol-buffers/docs/reference/python/>.
+The [Message() class](https://developers.google.com/protocol-buffers/docs/reference/python/google.protobuf.message.Message-class) 
+is of particular use.
+
 ## KeyValueDatabaseInterface Methods
 
 `KeyValueDatabaseInterface()`: An interface class for a simple Key-Value Relational Database. Has several different
@@ -56,8 +67,8 @@ CRUD methods
 * return: void
 
 
-## Example
+## Examples
 
 There are two example python files in the project:
 * `example.py` shows how to use the custom Key-Value interface; and
-* `example_protobuf.py` shows how add a serialized protocol buffer.  
+* `example_protobuf.py` shows how add a serialized protocol buffer.
