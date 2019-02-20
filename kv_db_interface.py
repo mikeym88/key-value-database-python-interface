@@ -5,6 +5,7 @@ from sqlalchemy.orm import *
 import json
 import re
 import sys
+from google.protobuf.message import Message as ProtocolBufferMessage
 
 Base = declarative_base()
 
@@ -12,8 +13,7 @@ Base = declarative_base()
 class KeyValue(Base):
     __tablename__ = "kvtable"
 
-    id = Column(Integer, primary_key=True)
-    key = Column(String(), nullable=False, unique=True)
+    key = Column(String(), nullable=False, unique=True, primary_key=True)
     value = Column(BLOB, nullable=False)
 
     def __init__(self, key, value):
@@ -48,6 +48,9 @@ class KeyValueDatabaseInterface(object):
         :return: value
         :rtype: bytes
         """
+
+        if issubclass(type(value), ProtocolBufferMessage):
+            value = value.SerializeToString()
         if type(value) is str:
             return bytes(value, 'UTF-8')
         elif type(value) is int:
