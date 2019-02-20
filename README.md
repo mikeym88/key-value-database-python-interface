@@ -11,10 +11,10 @@ implementation can be hidden. Instead, a dictionary or a tuple will probably be 
 By default the module uses [SQLite3](https://www.sqlite.org/) as a database, but it can [support any of the ones
 supported by SQLALchemy](https://docs.sqlalchemy.org/en/latest/core/engines.html).
 
-## Database
+## Connecting to Database
 
-Currently SQLite defaults as the default database. It's a local database saved to a `.db` file. You can open and view
-their content using 
+Currently SQLite defaults as the default database. It's a local database saved to a `.db` file. You can open the 
+database file and view the content using [DB Browser for SQLite](https://sqlitebrowser.org/). 
 
 ## Python Google Protocol Buffer Message() Class Document
 
